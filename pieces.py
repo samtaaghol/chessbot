@@ -1,5 +1,5 @@
 """ 
-Generic Piece class type to be inherited by all pieces. Test
+Generic Piece class type to be inherited by all pieces.  
 
 color is stored as (-1, 1) = (White, Black)
 """
@@ -29,7 +29,7 @@ class Piece:
         return (self.x, self.y)
 
     """
-    Generates the path for the pieces coordinate to a given coordinate
+    Generates the path from our piece to the given (a,b) coordinate.
     """
 
     def path(self, a, b):
