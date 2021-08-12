@@ -16,18 +16,24 @@ def excl_range(start, end, step):
 
 class Piece:
     def __init__(self, color, position):
+        self.get_vectors()
         self.color = color
         self.x, self.y = position
-        self.vectors = self.get_vectors()
         self.moves = self.get_available_moves()
 
     """
-    Returns the position of the piece
+    Returns if the given coordinate points to an enemy piece.
     """
-
-    def get_position(self):
-        return (self.x, self.y)
-
+    
+    def is_enemy(self, board, a, b):
+        
+        piece = board.get(a, b)
+        
+        if piece == None:
+            return False
+        
+        return piece.color != self.color
+    
     """
     Generates the path from our piece to the given (a,b) coordinate.
     """
@@ -36,8 +42,8 @@ class Piece:
 
         # Gets the x and y path values by using an exclusive range.
         # The step is whether the coordinate is left/right or below/above.
-        x_vals = excl_range(self.x, a, self.is_left(a))
-        y_vals = excl_range(self.y, b, self.is_above(b))
+        x_vals = excl_range(self.x, a, self.releation(self.x, a))
+        y_vals = excl_range(self.y, b, -self.releation(self.y, b))
 
         # If one of the lists are empty, then the path must be straight
         # hence all the x/y values will be constant.
@@ -54,34 +60,32 @@ class Piece:
         return all([board.empty(square) for square in self.path(a, b)])
 
     """
-    Returns if the coordinate is right of the piece. (-1 : left, 0 : center, 1 : right)
+    Returns the releation between to numbers reprsenting geometric positions. e.g (-1 : left, 0 : center, 1 : right)
     """
 
-    def is_right(self, a):
-        delta = a - self.x
+    def releation(self, a1, a2):
+        delta = a2 - a1
         if delta == 0:
             return 0
         return delta / abs(delta)
 
+    
     """
-    Returns if the coordinate is above of the piece. (-1 : below, 0 : center, 1 : above)
+    Returns whether the destination square is a valid square to move to.
     """
-
-    def is_above(self, b):
-        delta = self.y - b
-        if delta == 0:
-            return 0
-        return delta / abs(delta)
+    
+    def valid_target(self, board, a, b):
+        end_is_not_friend = self.is_enemey(board, a, b)
+        in_bounds = (-1 < a < 8) and (-1 < b < 8)
+        return end_is_not_friend and in_bounds
 
     """
     Checks if a given vector is a valid move for a piece.
     """
 
     def valid_move(self, board, a, b):
-        end_is_not_friend = board.get_piece().color != self.color
-        path_is_clear = self.path_clear(board, self.x + a, self.y + b)
-        return end_is_not_friend and path_is_clear
-
+        return self.valid_target(board, a, b) and self.path_clear(board, a, b)
+    
     """
     Gets all the available moves for this piece.
     TODO: optimize for moves contained within larger moves.
@@ -91,7 +95,7 @@ class Piece:
     def get_available_moves(self, board):
         moves = []
         for (x, y) in self.vectors:
-            if self.valid_move(board, x, y):
+            if self.valid_move(board, self.x + x, self.y + y):
                 moves.append((self.x + x, self.y + y))
         return moves
 
@@ -105,32 +109,48 @@ class Piece:
 
 class Pawn(Piece):
     def get_vectors(self):
-        return [(0, self.c), (0, 2 * self.c)]
+        self.vectors = [(0, self.color), (0, 2 * self.color)]
 
+    def valid_move(self, board, a, b):
+        return super().valid_move(board, a, b) and self.is_enemy(board, a, b)
+    
     def get_available_moves(self, board):
-        return
+        attack_moves = [(self.x + 1, self.y + self.c),(self.x + 1, self.y + self.c)]
+        return super().get_available_moves() + filter(self.valid_move, attack_moves)
 
 
+"""
+TODO: vector generation may need to be modified for optimisation.
+"""
 class Rook(Piece):
     def get_vectors(self):
-        return [(0, self.c), (0, 2 * self.c)]
+        vectors = []
+        for x in range(1,8):
+            vectors += [(0, x),(x, 0),(0,-x),(-x,0)]
 
 
 class Knight(Piece):
     def get_vectors(self):
-        return [(0, self.c), (0, 2 * self.c)]
+        self.vectors = [(1,2), (1,-2), (-1,2), (-1,-2), (2,1), (2,-1), (-2,1), (-2,-1)]
+
+    def valid_move(self, board, a, b):
+        return self.valid_target(board, a, b)
 
 
 class Bishop(Piece):
     def get_vectors(self):
-        return [(0, self.c), (0, 2 * self.c)]
+        for x in range(1, 8):
+            self.vectors += [(x,  x),(x, -x),(-x, x),(-x,-x)]
 
 
 class Queen(Piece):
     def get_vectors(self):
-        return [(0, self.c), (0, 2 * self.c)]
+        self.vectors = Rook(None).vectors + Bishop(None).vectors
 
 
 class King(Piece):
     def get_vectors(self):
-        return [(0, self.c), (0, 2 * self.c)]
+        self.vectors = [(0,1),(0,-1),(-1,0),(1,0),(-1,1),(1,1),(-1,-1),(1,-1)]
+
+    def valid_move(self, board, a, b):
+        return super().valid_move(board, a, b) and board.safe_square(self.color, a, b)
