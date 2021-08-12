@@ -28,9 +28,9 @@ class Piece:
     Returns if the given coordinate points to an enemy piece.
     """
     
-    def is_enemy(self, board, a, b):
+    def is_enemy(self, board, pos):
         
-        piece = board.get(a, b)
+        piece = board.get(pos[0], pos[1])
         
         if piece == None:
             return False
@@ -53,6 +53,7 @@ class Piece:
         const = a if not y_vals else b
 
         # Zip the two lists together, if one list is empty fill with the constant.
+        # And make sure to remove the first element as thats where this piece is.
         return list(zip_longest(x_vals, y_vals, fillvalue=const)[1:])
 
     """
@@ -62,17 +63,6 @@ class Piece:
     def path_clear(self, board, a, b):
         return all([board.empty(square) for square in self.path(a, b)])
 
-    """
-    Returns the releation between to numbers reprsenting geometric positions. e.g (-1 : left, 0 : center, 1 : right)
-    """
-
-    def releation(self, a1, a2):
-        delta = a2 - a1
-        if delta == 0:
-            return 0
-        return delta / abs(delta)
-
-    
     """
     Returns whether the destination square is a valid square to move to.
     """
