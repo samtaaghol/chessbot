@@ -35,9 +35,9 @@ class Board:
     def get_available_moves(self):
         for piece in self.pieces:
             if piece.color == -1:
-                self.white_moves += coupler(piece.get_pos(), piece.get_available_moves())
+                self.white_moves += coupler(piece.get_pos(), piece.get_moves())
             if piece.color == 1:
-                self.black_moves += coupler(piece.get_pos(), piece.get_available_moves())
+                self.black_moves += coupler(piece.get_pos(), piece.get_moves())
                         
     def empty(self, x, y):
         return get(x, y) == None
@@ -53,7 +53,19 @@ class Board:
     def in_check(self):
         for piece in self.pieces:
             if piece.color != self.current_color:
-                if self.
-            
+                if self.get_king_pos() in piece.get_moves():
+                    return True
+        return False
+    
+    def moves_into_check(self, move):
+        self.move(move)
+        if self.in_check():
+            self.move(move[::-1])
+            return True
+        return False
+    
     def move(self, move):
-        self.board
+        start, end = move
+        self.board[end[1]][end[0]] = self.board[start[1]][start[0]]
+        self.board[start[1]][start[0]] = None
+        
