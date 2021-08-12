@@ -9,7 +9,7 @@ from itertools import zip_longest as zipl
 sign = lambda a: (a > 0) - (a < 0)
 
 
-class Pieces:
+class Piece:
     def __init__(self, color):
         self.color = color
         self.vectors = []
