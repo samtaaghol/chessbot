@@ -5,14 +5,10 @@ color is stored as (-1, 1) = (White, Black)
 """
 
 from itertools import zip_longest
+from board import Board
 
-
-# This range function excludes start.
-def excl_range(start, end, step):
-    if step > 0:
-        return list(range(start + 1, end, step))
-    return list(range(start - 1, end, step))
-
+# Returns the sign of number -1, 0, 1
+sign = lambda a : (a>0) - (a<0)
 
 class Piece:
     def __init__(self, color, position):
@@ -21,6 +17,13 @@ class Piece:
         self.x, self.y = position
         self.moves = self.get_available_moves()
 
+    """
+    Returns the position of the piece.
+    """
+    
+    def get_pos(self):
+        return (self.x, self.y)
+    
     """
     Returns if the given coordinate points to an enemy piece.
     """
@@ -42,15 +45,15 @@ class Piece:
 
         # Gets the x and y path values by using an exclusive range.
         # The step is whether the coordinate is left/right or below/above.
-        x_vals = excl_range(self.x, a, self.releation(self.x, a))
-        y_vals = excl_range(self.y, b, -self.releation(self.y, b))
+        x_vals = range(self.x, a, sign(a - self.x))
+        y_vals = range(self.y, b, sign(self.y - b))
 
         # If one of the lists are empty, then the path must be straight
         # hence all the x/y values will be constant.
         const = a if not y_vals else b
 
         # Zip the two lists together, if one list is empty fill with the constant.
-        return zip_longest(x_vals, y_vals, fillvalue=const)
+        return list(zip_longest(x_vals, y_vals, fillvalue=const)[1:])
 
     """
     Checks if all the squares on a given moves path are empty.
@@ -84,15 +87,18 @@ class Piece:
     """
 
     def valid_move(self, board, a, b):
-        return self.valid_target(board, a, b) and self.path_clear(board, a, b)
+        return self.valid_target(board, a, b) and 
+               self.path_clear(board, a, b)   and 
+               not board.leaves_check((self.get_pos(), (a, b)))
     
+
     """
     Gets all the available moves for this piece.
     TODO: optimize for moves contained within larger moves.
     TODO: Check for checks.
     """
 
-    def get_available_moves(self, board):
+    def get_moves(self, board):
         moves = []
         for (x, y) in self.vectors:
             if self.valid_move(board, self.x + x, self.y + y):
@@ -114,7 +120,7 @@ class Pawn(Piece):
     def valid_move(self, board, a, b):
         return super().valid_move(board, a, b) and self.is_enemy(board, a, b)
     
-    def get_available_moves(self, board):
+    def get_moves(self, board):
         attack_moves = [(self.x + 1, self.y + self.c),(self.x + 1, self.y + self.c)]
         return super().get_available_moves() + filter(self.valid_move, attack_moves)
 
