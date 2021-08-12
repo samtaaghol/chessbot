@@ -4,19 +4,23 @@ Generic Piece class type to be inherited by all pieces.
 color is stored as (-1, 1) = (White, Black)
 """
 
-from itertools import zip_longest
+from itertools import zip_longest as zipl
 from board import Board
 
-# Returns the sign of number -1, 0, 1
-sign = lambda a : (a>0) - (a<0)
-
 class Piece:
-    def __init__(self, color, position):
+    def __init__(self, color):
         self.get_vectors()
         self.color = color
-        self.x, self.y = position
+        self.position = (0,0)
         self.moves = self.get_available_moves()
+    
+    """
+    Sets the position of the piece.
+    """
 
+    def set_position(self, x, y):
+        self.position = (x,y)
+    
     """
     Returns the position of the piece.
     """
@@ -54,7 +58,7 @@ class Piece:
 
         # Zip the two lists together, if one list is empty fill with the constant.
         # And make sure to remove the first element as thats where this piece is.
-        return list(zip_longest(x_vals, y_vals, fillvalue=const)[1:])
+        return list(zipl(x_vals, y_vals, fillvalue=const)[1:])
 
     """
     Checks if all the squares on a given moves path are empty.
