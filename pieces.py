@@ -1,5 +1,5 @@
 """ 
-Generic Piece class type to be inherited by all pieces.
+Generic Piece class type to be inherited by all pieces. Test
 
 color is stored as (-1, 1) = (White, Black)
 """
