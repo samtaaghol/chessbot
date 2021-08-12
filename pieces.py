@@ -17,10 +17,10 @@ class Piece:
         self.position = (0, 0)
 
     def __str__(self):
-        return self.__class__.__name__[:3]
+        return self.__class__.__name__[:4]
 
     def __repr__(self):
-        return self.__class__.__name__[:3]
+        return self.__class__.__name__[:4]
 
     """
 	Sets the position of the piece.

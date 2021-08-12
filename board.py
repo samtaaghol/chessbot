@@ -6,7 +6,7 @@ import numpy as np
 coupler = lambda pos, moves: map(lambda move: (pos, move), moves)
 
 
-class Boards:
+class Board:
     def __init__(self):
 
         self.current_color = -1
@@ -81,6 +81,7 @@ class Boards:
         return False
 
     def move(self, move):
-        start, end = move
-        self.board[end[1]][end[0]] = self.board[start[1]][start[0]]
-        self.board[start[1]][start[0]] = None
+        if move in (self.white_moves if self.current_color == -1 else self.black_moves):
+            start, end = move
+            self.board[end[1]][end[0]] = self.board[start[1]][start[0]]
+            self.board[start[1]][start[0]] = None
