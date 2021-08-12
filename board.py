@@ -6,7 +6,7 @@ import numpy as np
 coupler = lambda pos, moves: map(lambda move: (pos, move), moves)
 
 
-class Board:
+class Boards:
     def __init__(self):
 
         self.current_color = -1
