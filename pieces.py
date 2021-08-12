@@ -5,45 +5,53 @@ color is stored as (-1, 1) = (White, Black)
 """
 
 from itertools import zip_longest as zipl
-from board import Board
+
+sign = lambda a: (a > 0) - (a < 0)
+
 
 class Piece:
     def __init__(self, color):
-        self.get_vectors()
         self.color = color
-        self.position = (0,0)
-        self.moves = self.get_available_moves()
-    
+        self.vectors = []
+        self.get_vectors()
+        self.position = (0, 0)
+
+    def __str__(self):
+        return self.__class__.__name__[:3]
+
+    def __repr__(self):
+        return self.__class__.__name__[:3]
+
     """
-    Sets the position of the piece.
-    """
+	Sets the position of the piece.
+	"""
 
     def set_position(self, x, y):
-        self.position = (x,y)
-    
+        self.position = (x, y)
+
     """
-    Returns the position of the piece.
-    """
-    
+	Returns the position of the piece.
+	"""
+
     def get_pos(self):
         return (self.x, self.y)
-    
+
     """
-    Returns if the given coordinate points to an enemy piece.
-    """
-    
+	Returns if the given coordinate points to an enemy piece.
+	"""
+
     def is_enemy(self, board, pos):
-        
+
         piece = board.get(pos[0], pos[1])
-        
+
         if piece == None:
             return False
-        
+
         return piece.color != self.color
-    
+
     """
-    Generates the path from our piece to the given (a,b) coordinate.
-    """
+	Generates the path from our piece to the given (a,b) coordinate.
+	"""
 
     def path(self, a, b):
 
@@ -61,36 +69,37 @@ class Piece:
         return list(zipl(x_vals, y_vals, fillvalue=const)[1:])
 
     """
-    Checks if all the squares on a given moves path are empty.
-    """
+	Checks if all the squares on a given moves path are empty.
+	"""
 
     def path_clear(self, board, a, b):
         return all([board.empty(square) for square in self.path(a, b)])
 
     """
-    Returns whether the destination square is a valid square to move to.
-    """
-    
+	Returns whether the destination square is a valid square to move to.
+	"""
+
     def valid_target(self, board, a, b):
         end_is_not_friend = self.is_enemey(board, a, b)
         in_bounds = (-1 < a < 8) and (-1 < b < 8)
         return end_is_not_friend and in_bounds
 
     """
-    Checks if a given vector is a valid move for a piece.
-    """
+	Checks if a given vector is a valid move for a piece.
+	"""
 
     def valid_move(self, board, a, b):
-        return self.valid_target(board, a, b) and 
-               self.path_clear(board, a, b)   and 
-               not board.leaves_check((self.get_pos(), (a, b)))
-    
+        return (
+            self.valid_target(board, a, b)
+            and self.path_clear(board, a, b)
+            and not board.leaves_check((self.get_pos(), (a, b)))
+        )
 
     """
-    Gets all the available moves for this piece.
-    TODO: optimize for moves contained within larger moves.
-    TODO: Check for checks.
-    """
+	Gets all the available moves for this piece.
+	TODO: optimize for moves contained within larger moves.
+	TODO: Check for checks.
+	"""
 
     def get_moves(self, board):
         moves = []
@@ -100,8 +109,8 @@ class Piece:
         return moves
 
     """
-    The vectors each piece generates is dependent on the piece.
-    """
+	The vectors each piece generates is dependent on the piece.
+	"""
 
     def get_vectors(self):
         pass
@@ -113,25 +122,38 @@ class Pawn(Piece):
 
     def valid_move(self, board, a, b):
         return super().valid_move(board, a, b) and self.is_enemy(board, a, b)
-    
+
     def get_moves(self, board):
-        attack_moves = [(self.x + 1, self.y + self.c),(self.x + 1, self.y + self.c)]
-        return super().get_available_moves() + filter(self.valid_move, attack_moves)
+        attack_moves = [
+            (self.x + 1, self.y + self.color),
+            (self.x + 1, self.y + self.color),
+        ]
+        return super().get_moves(board) + filter(self.valid_move, attack_moves)
 
 
 """
 TODO: vector generation may need to be modified for optimisation.
 """
+
+
 class Rook(Piece):
     def get_vectors(self):
-        vectors = []
-        for x in range(1,8):
-            vectors += [(0, x),(x, 0),(0,-x),(-x,0)]
+        for x in range(1, 8):
+            self.vectors += [(0, x), (x, 0), (0, -x), (-x, 0)]
 
 
 class Knight(Piece):
     def get_vectors(self):
-        self.vectors = [(1,2), (1,-2), (-1,2), (-1,-2), (2,1), (2,-1), (-2,1), (-2,-1)]
+        self.vectors = [
+            (1, 2),
+            (1, -2),
+            (-1, 2),
+            (-1, -2),
+            (2, 1),
+            (2, -1),
+            (-2, 1),
+            (-2, -1),
+        ]
 
     def valid_move(self, board, a, b):
         return self.valid_target(board, a, b)
@@ -140,7 +162,7 @@ class Knight(Piece):
 class Bishop(Piece):
     def get_vectors(self):
         for x in range(1, 8):
-            self.vectors += [(x,  x),(x, -x),(-x, x),(-x,-x)]
+            self.vectors += [(x, x), (x, -x), (-x, x), (-x, -x)]
 
 
 class Queen(Piece):
@@ -150,7 +172,16 @@ class Queen(Piece):
 
 class King(Piece):
     def get_vectors(self):
-        self.vectors = [(0,1),(0,-1),(-1,0),(1,0),(-1,1),(1,1),(-1,-1),(1,-1)]
+        self.vectors = [
+            (0, 1),
+            (0, -1),
+            (-1, 0),
+            (1, 0),
+            (-1, 1),
+            (1, 1),
+            (-1, -1),
+            (1, -1),
+        ]
 
     def valid_move(self, board, a, b):
         return super().valid_move(board, a, b) and board.safe_square(self.color, a, b)
