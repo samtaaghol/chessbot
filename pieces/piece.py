@@ -6,7 +6,15 @@ color is stored as (-1, 1) = (White, Black)
 
 from itertools import zip_longest as zipl
 
-sign = lambda a: (a > 0) - (a < 0)
+
+"""
+Works like the builtin range function without requiring a step to be
+entered.
+"""
+
+
+def rnge(a, b):
+    return range(a, b) if a < b else range(a, b, -1)
 
 
 class Piece:
@@ -14,85 +22,70 @@ class Piece:
         self.color = color
         self.vectors = []
         self.get_vectors()
-        self.position = None
+        self.pos = None
+
+    """
+    String representation of a piece is just the name.
+    """
 
     def __str__(self):
         return self.__class__.__name__[:4]
+
+    """
+    Print representation of our piece is just a string.
+    """
 
     def __repr__(self):
         return self.__class__.__name__[:4]
 
     """
-	Sets the position of the piece.
+	Checks if all the squares on a given moves path are empty.
 	"""
 
-    def set_position(self, x, y):
-        self.position = (x, y)
-
-    """
-	Returns the position of the piece.
-	"""
-
-    def get_pos(self):
-        return (self.x, self.y)
-
-    """
-	Returns if the given coordinate points to an enemy piece.
-	"""
-
-    def is_enemy(self, board, pos):
-
-        piece = board.get(pos[0], pos[1])
-
-        if piece == None:
-            return False
-
-        return piece.color != self.color
+    def path_clear(self, board, dst):
+        return all(map(board.empty, self.path(dst)))
 
     """
 	Generates the path from our piece to the given (a,b) coordinate.
 	"""
 
-    def path(self, a, b):
+    def path(self, dst):
 
-        # Gets the x and y path values by using an exclusive range.
-        # The step is whether the coordinate is left/right or below/above.
-        x_vals = range(self.x, a, sign(a - self.x))
-        y_vals = range(self.y, b, sign(self.y - b))
+        # Gets the range of the start x/y to the end x/y
+        x_vals = rnge(self.pos[0], dst[0])
+        y_vals = rnge(self.pos[1], dst[1])
 
-        # If one of the lists are empty, then the path must be straight
-        # hence all the x/y values will be constant.
-        const = a if not y_vals else b
+        # horizontal or vertical, one of the arrays will have length 0.
+        if not x_vals:
+            x_vals = [self.pos[0]] * len(y_vals)
 
-        # Zip the two lists together, if one list is empty fill with the constant.
-        # And make sure to remove the first element as thats where this piece is.
-        return list(zipl(x_vals, y_vals, fillvalue=const)[1:])
+        if not y_vals:
+            y_vals = [self.pos[0]] * len(x_vals)
 
-    """
-	Checks if all the squares on a given moves path are empty.
-	"""
-
-    def path_clear(self, board, a, b):
-        return all([board.empty(square) for square in self.path(a, b)])
+        return list(zip(x_vals, y_vals))
 
     """
 	Returns whether the destination square is a valid square to move to.
 	"""
 
-    def valid_target(self, board, a, b):
-        end_is_not_friend = self.is_enemey(board, a, b)
-        in_bounds = (-1 < a < 8) and (-1 < b < 8)
-        return end_is_not_friend and in_bounds
+    def valid_target(self, board, dst):
+        return board.in_bounds(dst) and (
+            board.get(dst) == None or board.get(dst).color != self.color
+        )
 
     """
 	Checks if a given vector is a valid move for a piece.
 	"""
 
-    def valid_move(self, board, a, b):
+    def valid_move(self, board, dst):
         return (
-            self.valid_target(board, a, b)
-            and self.path_clear(board, a, b)
-            and not board.leaves_check((self.get_pos(), (a, b)))
+            board.in_bounds(dst)
+            # If the destination of the piece is not friendly.
+            and self.valid_target(board, (dst[0], dst[1]))
+            # If the path to the destination has no obstructions
+            and self.path_clear(board, (dst[0], dst[1]))
+            # If the move does not leave the king in check.
+            and not board.moves_into_check((self.pos, (dst[0], dst[1])))
         )
 
     """
@@ -104,9 +97,21 @@ class Piece:
     def get_moves(self, board):
         moves = []
         for (x, y) in self.vectors:
-            if self.valid_move(board, self.x + x, self.y + y):
-                moves.append((self.x + x, self.y + y))
-        return moves
+
+            # Applies the vector to our current position
+            new_position = (self.pos[0] + x, self.pos[1] + y)
+
+            # If the vector from start_pos to end_pos results in a valid move.
+            if self.valid_move(board, new_position):
+
+                # Add the end_pos to the list of moves considered valid.
+                moves.append(new_position)
+
+        # Formats the move into the (start_pos, end_pos) format.
+        return map(self.format_move, moves)
+
+    def format_move(self, end):
+        return (self.pos, end)
 
     """
 	The vectors each piece generates is dependent on the piece.

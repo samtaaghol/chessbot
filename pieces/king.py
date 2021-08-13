@@ -14,5 +14,5 @@ class King(Piece):
             (1, -1),
         ]
 
-    def valid_move(self, board, a, b):
-        return super().valid_move(board, a, b) and board.safe_square(self.color, a, b)
+    def valid_move(self, board, dst):
+        return super().valid_move(board, dst) and board.is_safe(dst)
