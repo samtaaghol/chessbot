@@ -50,7 +50,7 @@ class Board:
             Knight(1),
             Rook(1),
         ]
-        self.board[1], self.board[6] = [Pawn(1)] * 8, [Pawn(-1)] * 8
+        self.board[1], self.board[6] = [Pawn(-1)] * 8, [Pawn(1)] * 8
 
     def setup_pieces(self):
         for x in range(8):
@@ -75,6 +75,9 @@ class Board:
     def set(self, position, value):
         self.board[position[1]][position[0]] = value
 
+    def is_enemy(self, position):
+        return self.get(position).color != self.current_color
+
     def in_check(self):
         return self.is_safe(self.get_king_pos())
 
@@ -87,11 +90,11 @@ class Board:
         return pos in self.enemy_moves
 
     def moves_into_check(self, move):
-        self.unchecked_move(move)
-        if self.in_check():
-            self.unchecked_move(move[::-1])
-            return True
-        return False
+        # self.unchecked_move(move)
+        # if self.in_check():
+        #   self.unchecked_move(move[::-1])
+        #   return True
+        return True
 
     def safe_move(self, move):
         if self.valid_move(move):
@@ -115,6 +118,9 @@ class Board:
             self.in_bounds(move[0])
             and self.in_bounds(move[1])
             and self.get(move[0]) != None
+            and self.get(move[0]).valid_target(self, move[1])
+            and self.get(move[0]).path_clear(self, move[1])
+            and not self.moves_into_check(move)
         )
 
     """

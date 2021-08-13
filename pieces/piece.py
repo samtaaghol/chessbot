@@ -74,21 +74,6 @@ class Piece:
         )
 
     """
-	Checks if a given vector is a valid move for a piece.
-	"""
-
-    def valid_move(self, board, dst):
-        return (
-            board.in_bounds(dst)
-            # If the destination of the piece is not friendly.
-            and self.valid_target(board, (dst[0], dst[1]))
-            # If the path to the destination has no obstructions
-            and self.path_clear(board, (dst[0], dst[1]))
-            # If the move does not leave the king in check.
-            and not board.moves_into_check((self.pos, (dst[0], dst[1])))
-        )
-
-    """
 	Gets all the available moves for this piece.
 	TODO: optimize for moves contained within larger moves.
 	TODO: Check for checks.
@@ -102,7 +87,7 @@ class Piece:
             new_position = (self.pos[0] + x, self.pos[1] + y)
 
             # If the vector from start_pos to end_pos results in a valid move.
-            if self.valid_move(board, new_position):
+            if board.valid_move((self.pos, new_position)):
 
                 # Add the end_pos to the list of moves considered valid.
                 moves.append(new_position)
