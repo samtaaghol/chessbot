@@ -1,9 +1,10 @@
-from pieces import Pawn, Rook, Knight, Bishop, Queen, King
+from pieces.knight import Knight
+from pieces.bishop import Bishop
+from pieces.queen import Queen
+from pieces.king import King
+from pieces.pawn import Pawn
+from pieces.rook import Rook
 import numpy as np
-
-# This function couples one element with a list.
-# e.g coupler(1, [1,2,3,4,5]) -> [(1,1), (1,2), (1,3), (1,4), (1,5)]
-coupler = lambda pos, moves: map(lambda move: (pos, move), moves)
 
 
 class Board:
@@ -51,9 +52,13 @@ class Board:
     def get_available_moves(self):
         for piece in self.pieces:
             if piece.color == -1:
-                self.white_moves += coupler(piece.get_pos(), piece.get_moves())
+                self.white_moves += map(
+                    lambda move: (piece.get_pos(), move), piece.get_moves()
+                )
             if piece.color == 1:
-                self.black_moves += coupler(piece.get_pos(), piece.get_moves())
+                self.black_moves += map(
+                    lambda move: (piece.get_pos(), move), piece.get_moves()
+                )
 
     def empty(self, x, y):
         return self.get(x, y) == None
