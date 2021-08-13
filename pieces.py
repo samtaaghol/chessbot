@@ -14,7 +14,7 @@ class Piece:
         self.color = color
         self.vectors = []
         self.get_vectors()
-        self.position = (0, 0)
+        self.position = None
 
     def __str__(self):
         return self.__class__.__name__[:4]
