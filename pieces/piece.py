@@ -39,6 +39,13 @@ class Piece:
         return self.__class__.__name__[:4]
 
     """
+    Moves a piece to a given coordinate
+    """
+
+    def move(self, end):
+        self.pos = end
+
+    """
 	Checks if all the squares on a given moves path are empty.
 	"""
 
@@ -62,7 +69,7 @@ class Piece:
         if not y_vals:
             y_vals = [self.pos[0]] * len(x_vals)
 
-        return list(zip(x_vals, y_vals))
+        return list(zip(x_vals, y_vals))[1:]
 
     """
 	Returns whether the destination square is a valid square to move to.
@@ -73,6 +80,15 @@ class Piece:
             board.get(dst) == None or board.get(dst).color != self.color
         )
 
+    def get_defending_squares(self, board):
+        defended = []
+
+        for (x, y) in self.vectors:
+            defense = (self.pos[0] + x, self.pos[1] + y)
+            if board.valid_defense((self.pos, defense)):
+                defended.append(defense)
+        return defense
+
     """
 	Gets all the available moves for this piece.
 	TODO: optimize for moves contained within larger moves.
@@ -81,22 +97,19 @@ class Piece:
 
     def get_moves(self, board):
         moves = []
+
         for (x, y) in self.vectors:
 
             # Applies the vector to our current position
-            new_position = (self.pos[0] + x, self.pos[1] + y)
+            move = (self.pos, (self.pos[0] + x, self.pos[1] + y))
 
             # If the vector from start_pos to end_pos results in a valid move.
-            if board.valid_move((self.pos, new_position)):
+            if board.valid_move(move):
 
                 # Add the end_pos to the list of moves considered valid.
-                moves.append(new_position)
+                moves.append(move)
 
-        # Formats the move into the (start_pos, end_pos) format.
-        return map(self.format_move, moves)
-
-    def format_move(self, end):
-        return (self.pos, end)
+        return moves
 
     """
 	The vectors each piece generates is dependent on the piece.

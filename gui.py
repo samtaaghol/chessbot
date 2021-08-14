@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 from board import Board
+import math
 
 square_width = int(1000 / 8)
 
@@ -57,7 +58,22 @@ class Chess_Gui:
                 self.draw_square(x, y)
                 if self.game.get((x, y)) != None:
                     self.draw_piece(x, y, self.game.get((x, y)))
+        self.draw_moves()
         pygame.display.update()
+
+    def draw_moves(self):
+        for ((x1, y1), (x2, y2)) in self.game.moves:
+            self.draw_arrow(
+                (0, 0, 0),
+                (
+                    x1 * square_width + square_width / 2,
+                    y1 * square_width + square_width / 2,
+                ),
+                (
+                    x2 * square_width + square_width / 2,
+                    y2 * square_width + square_width / 2,
+                ),
+            )
 
     def draw_piece(self, x, y, piece):
 
@@ -78,6 +94,28 @@ class Chess_Gui:
             self.screen,
             color,
             (x * square_width, y * square_width, square_width, square_width),
+        )
+
+    def draw_arrow(self, colour, start, end):
+        pygame.draw.line(self.screen, colour, start, end, 2)
+        rotation = math.degrees(math.atan2(start[1] - end[1], end[0] - start[0])) + 90
+        pygame.draw.polygon(
+            self.screen,
+            (255, 0, 0),
+            (
+                (
+                    end[0] + 20 * math.sin(math.radians(rotation)),
+                    end[1] + 20 * math.cos(math.radians(rotation)),
+                ),
+                (
+                    end[0] + 20 * math.sin(math.radians(rotation - 120)),
+                    end[1] + 20 * math.cos(math.radians(rotation - 120)),
+                ),
+                (
+                    end[0] + 20 * math.sin(math.radians(rotation + 120)),
+                    end[1] + 20 * math.cos(math.radians(rotation + 120)),
+                ),
+            ),
         )
 
 
