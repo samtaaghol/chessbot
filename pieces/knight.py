@@ -15,7 +15,7 @@ class Knight(Piece):
         ]
 
     def get_defending_squares(self, board):
-        return [e for (s, e) in self.get_moves(board)]
+        return self.get_moves(board)
 
     """
     

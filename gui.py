@@ -3,15 +3,18 @@ from pygame.locals import *
 from board import Board
 import math
 
-square_width = int(1000 / 8)
+square_width = int(500 / 8)
 
 
 class Chess_Gui:
     def __init__(self):
 
-        self.screen = pygame.display.set_mode((1000, 1000))
+        self.screen = pygame.display.set_mode((square_width * 8, square_width * 8))
         self.game = Board()
         self.clock = pygame.time.Clock()
+
+        self.show_threatened_squares = False
+
         pygame.init()
         self.font = pygame.font.SysFont("monospace", 60)
         self.run()
@@ -23,8 +26,6 @@ class Chess_Gui:
         click1 = None
         click2 = None
 
-        print(self.game.moves)
-
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -32,13 +33,19 @@ class Chess_Gui:
                 if event.type == pygame.MOUSEBUTTONUP:
                     x, y = pygame.mouse.get_pos()
                     pos = ((x // square_width), (y // square_width))
-                    print(pos)
                     if click1 == None:
                         click1 = pos
                     else:
                         click2 = pos
                         self.game.safe_move((click1, click2))
                         click1, click2 = None, None
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.show_threatened_squares = True
+
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_SPACE:
+                        self.show_threatened_squares = False
 
             self.setup_board()
 
@@ -58,7 +65,9 @@ class Chess_Gui:
                 self.draw_square(x, y)
                 if self.game.get((x, y)) != None:
                     self.draw_piece(x, y, self.game.get((x, y)))
-        self.draw_moves()
+        # self.draw_moves()
+        if self.show_threatened_squares:
+            self.draw_threatened()
         pygame.display.update()
 
     def draw_moves(self):
@@ -73,6 +82,18 @@ class Chess_Gui:
                     x2 * square_width + square_width / 2,
                     y2 * square_width + square_width / 2,
                 ),
+            )
+
+    def draw_threatened(self):
+        for (start, (x, y)) in self.game.enemy_moves:
+            pygame.draw.circle(
+                self.screen,
+                (0, 0, 255),
+                (
+                    x * square_width + square_width // 2,
+                    y * square_width + square_width // 2,
+                ),
+                square_width // 4,
             )
 
     def draw_piece(self, x, y, piece):
@@ -104,16 +125,16 @@ class Chess_Gui:
             (255, 0, 0),
             (
                 (
-                    end[0] + 20 * math.sin(math.radians(rotation)),
-                    end[1] + 20 * math.cos(math.radians(rotation)),
+                    end[0] + 10 * math.sin(math.radians(rotation)),
+                    end[1] + 10 * math.cos(math.radians(rotation)),
                 ),
                 (
-                    end[0] + 20 * math.sin(math.radians(rotation - 120)),
-                    end[1] + 20 * math.cos(math.radians(rotation - 120)),
+                    end[0] + 10 * math.sin(math.radians(rotation - 120)),
+                    end[1] + 10 * math.cos(math.radians(rotation - 120)),
                 ),
                 (
-                    end[0] + 20 * math.sin(math.radians(rotation + 120)),
-                    end[1] + 20 * math.cos(math.radians(rotation + 120)),
+                    end[0] + 10 * math.sin(math.radians(rotation + 120)),
+                    end[1] + 10 * math.cos(math.radians(rotation + 120)),
                 ),
             ),
         )

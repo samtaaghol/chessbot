@@ -84,10 +84,13 @@ class Piece:
         defended = []
 
         for (x, y) in self.vectors:
-            defense = (self.pos[0] + x, self.pos[1] + y)
-            if board.valid_defense((self.pos, defense)):
+            defense = (self.pos, (self.pos[0] + x, self.pos[1] + y))
+
+            if board.valid_defense(defense):
+                print(defense)
                 defended.append(defense)
-        return defense
+
+        return defended
 
     """
 	Gets all the available moves for this piece.
