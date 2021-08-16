@@ -5,6 +5,7 @@ from pieces.king import King
 from pieces.pawn import Pawn
 from pieces.rook import Rook
 import numpy as np
+import math as m
 
 
 def rnge(a, b):
@@ -291,6 +292,10 @@ class Board:
         x_vals = rnge(move[0][0], move[1][0])
         y_vals = rnge(move[0][1], move[1][1])
 
+        # If no chess like path exists, return a piece so path clear returns false.
+        if x_vals and y_vals and len(x_vals) != len(y_vals):
+            return [self.get_king_pos()]
+
         # horizontal or vertical, one of the arrays will have length 0.
         if not x_vals:
             x_vals = [move[0][0]] * len(y_vals)
@@ -353,12 +358,64 @@ class Board:
     """
 
     def moves_into_check(self, move):
-        # self.unchecked_move(move)
-        # if self.in_check():
-        #   self.unchecked_move(move[::-1])
-        #   return True
+
+        k_pos = self.get_king_pos()
+
+        # If a king make sure we move into a safe square only.
+        if move[0] == k_pos:
+            return not self.is_safe(move[1])
+
+        # If the king and the piece are directly connected.
+        if self.path_clear((self.get_king_pos(), move[0])):
+            print(self.get_king_pos(), move[0])
+            # Get the unit vector between the king and the piece.
+            u_vector = self.get_unit_vector(
+                (move[0][0] - k_pos[0], move[0][1] - k_pos[1])
+            )
+
+            # Get the extended line between the king and the piece
+            # as any dangers caused by moving must be on the line.
+            extended_path = self.vector_applications(k_pos, u_vector)[1:]
+
+            # for piece in the extened_path
+            for pos in extended_path:
+                piece = self.get(pos)
+                if piece != None:
+
+                    # If the piece is a friend no need to look further.
+                    if piece.color == self.current_color:
+                        return False
+
+                    # Check if the unit vector *2 is in the pieces vector set. (avoid king vectors)
+                    else:
+                        return (u_vector[0] * 2, u_vector[1] * 2) in piece.get_vectors()
 
         return False
+
+    """
+    Returns the continual application of a vector to a position until a boundry is reached.
+    """
+
+    def vector_applications(self, pos, vector):
+
+        if not self.in_bounds(pos):
+            return []
+
+        new_pos = (pos[0] + vector[0], pos[1] + vector[1])
+
+        return [pos] + self.vector_applications(new_pos, vector)
+
+    """
+    Returns a unit vector given a vector. All valid vectors in chess will be of
+    the form (-1/1/0,-1/1/0)
+    """
+
+    @staticmethod
+    def get_unit_vector(vector):
+        return (
+            int(vector[0] / abs(vector[0]) if vector[0] != 0 else 1),
+            int(vector[1] / abs(vector[1]) if vector[1] != 0 else 1),
+        )
 
     """
     Returns if the given coordinates point to somewhere on the chessboard
