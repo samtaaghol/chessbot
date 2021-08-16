@@ -23,8 +23,8 @@ class Chess_Gui:
 
         counter = 0
 
-        click1 = None
-        click2 = None
+        self.click1 = None
+        self.click2 = None
 
         while True:
             for event in pygame.event.get():
@@ -33,12 +33,12 @@ class Chess_Gui:
                 if event.type == pygame.MOUSEBUTTONUP:
                     x, y = pygame.mouse.get_pos()
                     pos = ((x // square_width), (y // square_width))
-                    if click1 == None:
-                        click1 = pos
+                    if self.click1 == None:
+                        self.click1 = pos
                     else:
-                        click2 = pos
-                        self.game.safe_move((click1, click2))
-                        click1, click2 = None, None
+                        self.click2 = pos
+                        self.game.safe_move((self.click1, self.click2))
+                        self.click1, self.click2 = None, None
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         self.show_threatened_squares = True
@@ -65,10 +65,24 @@ class Chess_Gui:
                 self.draw_square(x, y)
                 if self.game.get((x, y)) != None:
                     self.draw_piece(x, y, self.game.get((x, y)))
-        # self.draw_moves()
+        # if self.click1 != None:
+        #    self.piece_moves()
+        self.draw_moves()
         if self.show_threatened_squares:
             self.draw_threatened()
         pygame.display.update()
+
+    def piece_moves(self):
+        for (start, (x, y)) in self.game.get(self.click1).get_moves(self.game):
+            pygame.draw.circle(
+                self.screen,
+                (0, 0, 255),
+                (
+                    x * square_width + square_width // 2,
+                    y * square_width + square_width // 2,
+                ),
+                square_width // 4,
+            )
 
     def draw_moves(self):
         for ((x1, y1), (x2, y2)) in self.game.moves:

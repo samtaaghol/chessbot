@@ -13,10 +13,6 @@ entered.
 """
 
 
-def rnge(a, b):
-    return range(a, b) if a < b else range(a, b, -1)
-
-
 class Piece:
     def __init__(self, color):
         self.color = color
@@ -46,39 +42,15 @@ class Piece:
         self.pos = end
 
     """
-	Checks if all the squares on a given moves path are empty.
-	"""
-
-    def path_clear(self, board, dst):
-        return all(map(board.empty, self.path(dst)))
-
-    """
-	Generates the path from our piece to the given (a,b) coordinate.
-	"""
-
-    def path(self, dst):
-
-        # Gets the range of the start x/y to the end x/y
-        x_vals = rnge(self.pos[0], dst[0])
-        y_vals = rnge(self.pos[1], dst[1])
-
-        # horizontal or vertical, one of the arrays will have length 0.
-        if not x_vals:
-            x_vals = [self.pos[0]] * len(y_vals)
-
-        if not y_vals:
-            y_vals = [self.pos[0]] * len(x_vals)
-
-        return list(zip(x_vals, y_vals))[1:]
-
-    """
 	Returns whether the destination square is a valid square to move to.
 	"""
 
-    def valid_target(self, board, dst):
-        return board.in_bounds(dst) and (
-            board.get(dst) == None or board.get(dst).color != self.color
-        )
+    def valid_target(self, piece):
+        return piece == None or piece.color != self.color
+
+    """
+    Gets all the squares a piece is defending.
+    """
 
     def get_defending_squares(self, board):
         defended = []
@@ -87,7 +59,6 @@ class Piece:
             defense = (self.pos, (self.pos[0] + x, self.pos[1] + y))
 
             if board.valid_defense(defense):
-                print(defense)
                 defended.append(defense)
 
         return defended

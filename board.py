@@ -7,6 +7,10 @@ from pieces.rook import Rook
 import numpy as np
 
 
+def rnge(a, b):
+    return range(a, b) if a < b else range(a, b, -1)
+
+
 class Board:
     def __init__(self):
 
@@ -138,7 +142,7 @@ class Board:
     """
 
     def in_check(self):
-        return self.is_safe(self.get_king_pos())
+        return not self.is_safe(self.get_king_pos())
 
     """
     Returns the position of the friendly king.
@@ -154,21 +158,39 @@ class Board:
     """
 
     def is_safe(self, pos):
-        return pos in self.enemy_moves
+        for enemy_attack in self.enemy_moves:
+            if pos == enemy_attack[1]:
+                return False
+        return True
 
     """
     Moves a piece making sure it obeys the rules of chess.
     """
 
     def safe_move(self, move):
+
+        # If the entered move is a valid move.
         if move in self.moves:
+
+            # perform the physical move.
             self.unchecked_move(move)
+
+            # change the current color flag.
             self.current_color *= -1
+
+            # get the squares the enemy is attacking.
             self.enemy_moves = self.get_attacked_squares()
-            self.moves = self.get_available_moves()
+
+            # check if the new king is in those squares.
             self.king_is_checked = self.in_check()
+
+            # get the new moves for the new team.
+            self.moves = self.get_available_moves()
+
+            # gets a list of pieces causing check if there are any.
             self.checkers = self.get_pieces_causing_check()
-            print(self.king_is_checked)
+
+            self.king_is_checked = False
 
     """
     Moves a piece without checking if it follows the rules of chess.
@@ -201,7 +223,7 @@ class Board:
             return False
 
         # If the piece cant see what its defending.
-        if not self.get(defense[0]).path_clear(self, defense[1]):
+        if not self.path_clear(defense):
             return False
 
         else:
@@ -213,7 +235,7 @@ class Board:
 
     def valid_move(self, move):
 
-        # If the start and end of the move are in bounds.
+        # If the start and end of the move are not in bounds.
         if not self.move_in_bounds(move):
             return False
 
@@ -221,11 +243,11 @@ class Board:
         if self.empty(move[0]) == None:
             return False
 
-        # If the desination and the journey of a move are both valid.
+        # If the desination and the journey of a move are both invalid.
         if not self.valid_move_journey(move):
             return False
 
-        # If the king is in check and this move doesnt bring him out.
+        # If the king is in check and this move doesnt bring him out of check.
         if self.king_is_checked and not self.moves_out_of_check(move):
             return False
 
@@ -248,8 +270,35 @@ class Board:
     """
 
     def valid_move_journey(self, move):
-        piece = self.get(move[0])
-        return piece.valid_target(self, move[1]) and piece.path_clear(self, move[1])
+        p1 = self.get(move[0])
+        p2 = self.get(move[1])
+        return p1.valid_target(p2) and self.path_clear(move)
+
+    """
+	Checks if all the squares on a given moves path are empty.
+	"""
+
+    def path_clear(self, move):
+        return all(map(self.empty, self.path(move)))
+
+    """
+	Generates the path a piece takes on a move.
+	"""
+
+    def path(self, move):
+
+        # Gets the range of the start x/y to the end x/y
+        x_vals = rnge(move[0][0], move[1][0])
+        y_vals = rnge(move[0][1], move[1][1])
+
+        # horizontal or vertical, one of the arrays will have length 0.
+        if not x_vals:
+            x_vals = [move[0][0]] * len(y_vals)
+
+        if not y_vals:
+            y_vals = [move[0][1]] * len(x_vals)
+
+        return list(zip(x_vals, y_vals))[1:]
 
     """
     Returns whether the given move takes our king out of check.
@@ -271,11 +320,11 @@ class Board:
         # If 2 or more enemies are causing check the king must move.
         if len(enemies) >= 2:
 
-            # As we already checked if a king must move.
+            # As we already checked if the current piece is a king.
             return False
 
         # get the position of the enemy piece.
-        e_pos = enemies[0].pos
+        e_pos = enemies[0]
 
         # If the attacking piece is a knight, there is no blocking.
         if isinstance(self.get(e_pos), Knight):
@@ -286,28 +335,18 @@ class Board:
         # Get the kings position.
         k_pos = self.get_king_pos()
 
-        # Get the vector between the enemy and the king.
-        enemy_to_king = (e_pos[0] - k_pos[0], e_pos[1] - k_pos[1])
-
         # Get the path between the enemy and the king.
-        e_k_path = self.get(k_pos).path(e_pos)
+        e_k_path = self.path((k_pos, e_pos)) + [e_pos]
 
         # return whether the move blocks the enemies path to check.
-        return move[0] in e_k_path
+        return move[1] in e_k_path
 
     """
     Returns an array containing the positions of pieces which cause check.
     """
 
     def get_pieces_causing_check(self):
-
-        enemies_causing_check = []
-
-        for enemy_move in self.enemy_moves:
-            if self.get_king_pos() == enemy_move[1]:
-                enemies_causing_check.append(enemy_move[0])
-
-        return enemies_causing_check
+        return [s for (s, e) in self.enemy_moves if e == self.get_king_pos()]
 
     """
     Checks if a move results in check.

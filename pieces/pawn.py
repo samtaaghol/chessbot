@@ -22,11 +22,11 @@ class Pawn(Piece):
         return moves + self.get_attacking_moves(board)
 
     def get_defending_squares(self, board):
-        return [
-            defense
-            for defense in self.get_attacking_moves(board)
-            if board.valid_defense(defense)
+        attk_moves = [
+            (self.pos, (self.pos[0] + 1, self.pos[1] - self.color)),
+            (self.pos, (self.pos[0] - 1, self.pos[1] - self.color)),
         ]
+        return [defense for defense in attk_moves if board.valid_move(defense)]
 
     def get_attacking_moves(self, board):
         attk_moves = [

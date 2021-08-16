@@ -32,8 +32,12 @@ class Knight(Piece):
             if (
                 board.in_bounds(move[0])
                 and board.in_bounds(move[1])
-                and self.valid_target(board, move[1])
-                # and board.moves_into_check(move)
+                and self.valid_target(board.get(move[1]))
+                and (
+                    not board.king_is_checked
+                    or (board.king_is_checked and board.moves_out_of_check(move))
+                )
+                and not board.moves_into_check(move)
             ):
 
                 # Add the end_pos to the list of moves considered valid.
