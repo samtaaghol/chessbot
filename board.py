@@ -360,14 +360,12 @@ class Board:
     def moves_into_check(self, move):
 
         k_pos = self.get_king_pos()
-
         # If a king make sure we move into a safe square only.
         if move[0] == k_pos:
             return not self.is_safe(move[1])
 
         # If the king and the piece are directly connected.
-        if self.path_clear((self.get_king_pos(), move[0])):
-            print(self.get_king_pos(), move[0])
+        if self.path_clear((k_pos, move[0])):
             # Get the unit vector between the king and the piece.
             u_vector = self.get_unit_vector(
                 (move[0][0] - k_pos[0], move[0][1] - k_pos[1])
@@ -375,7 +373,7 @@ class Board:
 
             # Get the extended line between the king and the piece
             # as any dangers caused by moving must be on the line.
-            extended_path = self.vector_applications(k_pos, u_vector)[1:]
+            extended_path = self.vector_applications(move[0], u_vector)[1:]
 
             # for piece in the extened_path
             for pos in extended_path:
@@ -386,9 +384,11 @@ class Board:
                     if piece.color == self.current_color:
                         return False
 
+                    if move[1] == piece.pos:
+                        return False
+
                     # Check if the unit vector *2 is in the pieces vector set. (avoid king vectors)
-                    else:
-                        return (u_vector[0] * 2, u_vector[1] * 2) in piece.get_vectors()
+                    return (u_vector[0] * 2, u_vector[1] * 2) in piece.vectors
 
         return False
 
